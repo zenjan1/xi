@@ -352,6 +352,8 @@ enum Cmd {
         #[arg(long)]
         uninstall: bool,
     },
+    /// 打印版本号
+    Version,
     /// 系统信息:内核版本/架构/组件状态/已加载模块/模型配置
     Sysinfo,
     /// 列出所有已安装的扩展
@@ -727,6 +729,10 @@ async fn main() -> Result<()> {
             }
             hooks::install_hooks(pre_commit, pre_push, uninstall, &cfg.repo_dir)
         },
+        Cmd::Version => {
+            println!("xi v{}", env!("CARGO_PKG_VERSION"));
+            Ok(())
+        }
         Cmd::Sysinfo => cmd_sysinfo(&cfg),
         Cmd::Extensions => {
             let ext_dir = extensions_dir();
