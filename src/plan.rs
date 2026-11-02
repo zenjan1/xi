@@ -107,14 +107,18 @@ impl Plan {
     /// 以及模型常见的字段格式幻觉(id 为字符串/数组、needs 混入非数字等)。
     /// 解析 LLM 原始输出为计划(不做最终 validate),供 dev 模式先容忍修复再校验。
     pub fn parse_from_llm(goal: &str, raw: &str) -> anyhow::Result<Self> {
-        let json_text = extract_json_object(raw)?;
-        let v: serde_json::Value =
-            serde_json::from_str(&json_text).context("解析计划 JSON 失败")?;
-
-        let steps_v = v
-            .get("steps")
-            .and_then(|s| s.as_array())
-            .context("计划缺少 steps 数组")?;
+        // 兼容两种格式: {"goal":"...","steps":[...]} 或裸数组 [...]
+        let steps_v: Vec<serde_json::Value> = if let Some(arr) = extract_json_array(raw) {
+            arr
+        } else {
+            let json_text = extract_json_object(raw)?;
+            let v: serde_json::Value =
+                serde_json::from_str(&json_text).context("解析计划 JSON 失败")?;
+            v.get("steps")
+                .and_then(|s| s.as_array())
+                .cloned()
+                .context("计划缺少 steps 数组")?
+        };
 
         let mut steps: Vec<Step> = Vec::new();
         for (i, sv) in steps_v.iter().enumerate() {
@@ -354,6 +358,29 @@ fn extract_json_object(raw: &str) -> anyhow::Result<String> {
         .filter(|e| *e > start)
         .context("JSON 对象不完整")?;
     Ok(raw[start..=end].to_string())
+}
+
+/// 从 LLM 原始输出中提取顶层 JSON 数组(如 Kimi-K2.7-Code 返回裸数组)。
+/// 只在 `[` 出现在 `{` 之前时才算顶层数组(避免误抓对象内的数组)。
+fn extract_json_array(raw: &str) -> Option<Vec<serde_json::Value>> {
+    let bracket = raw.find('[')?;
+    // 如果 `{` 在 `[` 之前出现,说明顶层是对象,不是裸数组
+    if let Some(brace) = raw.find('{') {
+        if brace < bracket {
+            return None;
+        }
+    }
+    let end = raw.rfind(']')?;
+    if end <= bracket {
+        return None;
+    }
+    let slice = &raw[bracket..=end];
+    let v: Vec<serde_json::Value> = serde_json::from_str(slice).ok()?;
+    // 必须是非空数组且首元素是对象
+    if v.is_empty() || v.first().is_none_or(|x| !x.is_object()) {
+        return None;
+    }
+    Some(v)
 }
 
 /// 从一个 JSON 值里尽力提取一个非负整数:
