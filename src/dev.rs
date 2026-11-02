@@ -20,7 +20,7 @@ use crate::llm::Llm;
 use crate::planner;
 use crate::util::clip;
 
-const MAX_REPAIRS: usize = 8;
+const MAX_REPAIRS: usize = 3;
 /// --extend 单次运行最多允许的补给轮数(防失控;每轮 1 次 LLM 调用)
 const MAX_EXTEND_ROUNDS: usize = 1000;
 
