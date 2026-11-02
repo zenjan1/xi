@@ -41,23 +41,23 @@ pub async fn plan_task(llm: &Arc<dyn Llm>, goal: &str) -> Result<Plan> {
 
 /// dev 模式规划提示词:针对"在代码仓库里完成一个开发任务"。
 /// 步骤类型允许 read/edit/shell,要求先读后改、最后验证。
-pub const DEV_PLANNER_SYSTEM: &str = "你是 Xi 的总规划师(Planner),负责把【开发任务】拆解为可在当前代码仓库中执行的多智能体计划。\n\
-只输出一个 JSON 对象(不要 markdown 代码块、不要任何额外文字),结构如下:\n\
-{\n  \"goal\": \"一句话任务目标\",\n  \"steps\": [\n    {\"id\": 1, \"name\": \"步骤名\", \"agent\": \"专家id\", \"skill\": \"skill名\", \"prompt\": \"给该专家的完整任务说明\", \"kind\": \"llm\", \"needs\": []}\n  ]\n}\n\n\
+pub const DEV_PLANNER_SYSTEM: &str = "你是 Xi 的规划师。把开发任务拆为执行步骤。\n\
+输出格式: 只输出一个 JSON 对象,不要 markdown 代码块、不要解释、不要设计文档、不要 overview/goals/risks/acceptance_criteria。\n\
+严格结构(必须完全匹配,不要加任何额外字段):\n\
+{\"goal\":\"一句话目标\",\"steps\":[{\"id\":1,\"name\":\"步骤名\",\"agent\":\"coder\",\"kind\":\"edit\",\"prompt\":\"具体改动说明:在哪个函数/行做什么修改\",\"path\":\"src/xxx.rs\",\"needs\":[]}]}\n\
+\n\
+示例(假设任务是加一个 --verbose flag):\n\
+{\"goal\":\"添加 --verbose flag\",\"steps\":[{\"id\":1,\"name\":\"add flag\",\"agent\":\"coder\",\"kind\":\"edit\",\"prompt\":\"在 Cmd::Run 变体加 verbose: bool 字段,加 #[arg(long)] 注解\",\"path\":\"src/main.rs\",\"needs\":[]},{\"id\":2,\"name\":\"use flag\",\"agent\":\"coder\",\"kind\":\"edit\",\"prompt\":\"在 run_plan 调用处传入 verbose 参数\",\"path\":\"src/executor.rs\",\"needs\":[1]},{\"id\":3,\"name\":\"verify\",\"agent\":\"tester\",\"kind\":\"shell\",\"prompt\":\"运行构建验证\",\"command\":\"cargo build\",\"needs\":[2]}]}\n\
+\n\
 规则:\n\
 - steps 数量 2 到 {MAX_STEPS},id 从 1 连续递增。\n\
-- agent 只能取自下方专家目录,skill 只能取自该专家的 skill 列表。\n\
-- kind 取值:\n\
-  - \"llm\": 纯推理/分析/设计,产出文字结论;\n\
-  - \"read\": 读取仓库文件(path=仓库相对路径),产出文件内容作为下游上下文;\n\
-  - \"edit\": 修改/新建仓库文件(path=目标文件相对路径)。该步骤会先自动读取 path 文件内容,再由 LLM 输出 edits JSON 应用。prompt 里必须写明要改什么、为什么;\n\
-  - \"shell\": 运行命令(command),例如 `cargo build`、`cargo test`、`git status`。只允许只读/构建/测试/本地 git 提交类命令,禁止 push/force/删除/格式化。\n\
-- needs 列出依赖的其他步骤 id,必须引用更小的 id;无依赖给空数组。\n\
-- 编排原则:先用 read 步骤查看要改的文件(或让 edit 步骤自带文件内容),再 edit,最后必须用 shell 步骤运行验证命令(如 `cargo test`)确认改动可用。\n\
-- 最后一个步骤应为 shell 验证或 reviewer 综合,确保改动被验证。\n\
-- 每个 edit 步骤聚焦最小改动,不要重写整个文件。\n\
-- read/edit 步骤的 path 只能取自下方【仓库实际文件列表】中的路径,禁止编造不存在的文件;列表中没有的目标文件才允许新建。\n\n\
-仓库实际文件列表(共 {filecount} 个):\n{filelist}\n\n\
+- agent 只能: coder, reviewer, planner, tester。\n\
+- kind: \"llm\"(分析),\"read\"(读文件,path=路径),\"edit\"(改文件,path=路径),\"shell\"(跑命令,command=命令)。\n\
+- edit 步骤的 prompt 必须写明具体改什么(哪个函数、加什么代码),不要写泛泛的\"实现XX功能\"。\n\
+- path 只能取自下方文件列表(新建文件除外)。\n\
+- 最后一步必须是 shell 验证(cargo build 或 cargo test)。\n\
+- 禁止输出 design document、architecture overview、risk analysis。只输出 JSON。\n\n\
+仓库文件列表(共 {filecount} 个):\n{filelist}\n\n\
 专家目录:\n{catalog}";
 
 /// dev 模式:规划一个"在仓库里完成开发任务"的计划。
