@@ -53,7 +53,7 @@ pub struct Snapshot {
 }
 
 const DEPS_CONTEXT_MAX: usize = 800;
-const SHELL_TIMEOUT_SECS: u64 = 60;
+const SHELL_TIMEOUT_SECS: u64 = 180;
 const MAX_READ_BYTES: usize = 4096;
 
 #[derive(Debug, Clone, Serialize)]
