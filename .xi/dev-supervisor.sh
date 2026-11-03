@@ -29,7 +29,7 @@ if [ -n "$(git status --porcelain)" ]; then
   echo "[supervisor] 启动前工作区不干净(未提交改动保留,交由 dev 循环处理)" >> "$LOG"
 fi
 while true; do
-  ~/.local/bin/xi.real dev --repo "$REPO" --verify "cargo test" --minutes 43200 --extend 10 >> "$LOG" 2>&1
+  ~/.local/bin/xi.real dev --repo "$REPO" --verify "cargo test" --minutes 525600 --extend 1000 >> "$LOG" 2>&1
   rc=$?
   if [ "$rc" -eq 0 ]; then
     echo "[supervisor] $(date '+%F %T') dev 循环正常退出(rc=0),supervisor 结束" >> "$LOG"

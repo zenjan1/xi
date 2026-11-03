@@ -356,6 +356,31 @@
       "skip": false,
       "title": "交互式配置向导: `config init` 引导式创建完整配置",
       "verify": null
+    },
+    {
+      "title": "xi market search/install: 模块市场客户端(GitHub topics 搜索)",
+      "priority": 72,
+      "description": "M4: 从 GitHub 搜索 xi-module topic 的仓库, xi market search <keyword> 列出结果, xi market install <owner/repo> 克隆到 ~/.xi/modules/ 并注册。参考: npm/yarn registry 搜索机制 + Homebrew tap 模型。"
+    },
+    {
+      "title": "MCP server: xi 作为 MCP server 暴露 dev/run/model 工具",
+      "priority": 71,
+      "description": "M5: 实现 MCP (Model Context Protocol) server, 暴露 xi 的核心工具(dev/run/model/sysinfo)给外部 AI agent 调用。参考: Anthropic MCP 规范 + Cline/Cursor 的 MCP 集成。"
+    },
+    {
+      "title": "LLM streaming: 流式输出 + token 实时显示",
+      "priority": 70,
+      "description": "M5: LLM 响应流式输出(SSE), dev/run 执行时实时显示 token 流。参考: Claude Code 的 streaming UX + OpenAI streaming API。"
+    },
+    {
+      "title": "上下文自动管理: 长会话摘要/裁剪/窗口滑动",
+      "priority": 69,
+      "description": "M5: 当对话/任务上下文超过模型窗口时,自动摘要旧内容、保留关键决策。参考: Claude Code 的 context compaction + Cursor 的 auto-compact。"
+    },
+    {
+      "title": "多文件批量编辑: 单次 LLM 调用改多文件",
+      "priority": 68,
+      "description": "M5: 参考 Aider 的 repo map + search/replace 机制, 单次 LLM 调用同时编辑多个文件(减少 API 调用次数)。"
     }
   ]
 }
