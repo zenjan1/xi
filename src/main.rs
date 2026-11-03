@@ -11,6 +11,7 @@ mod edits;
 mod executor;
 mod hooks;
 mod llm;
+mod mcp;
 mod memory;
 mod plan;
 mod planner;
@@ -358,6 +359,8 @@ enum Cmd {
     Sysinfo,
     /// 列出所有已安装的扩展
     Extensions,
+    #[command(about = "以 MCP server 模式运行 (stdio JSON-RPC)")]
+    Mcp,
     /// 外部扩展(内核驱动模块):扫描 ~/.xi/bin/ 下 xi-* 可执行文件
     #[command(external_subcommand)]
     Ext(Vec<String>),
@@ -656,6 +659,7 @@ async fn main() -> Result<()> {
             Ok(())
         }
         Cmd::Selfcheck => cmd_selfcheck(),
+        Cmd::Mcp => crate::mcp::run_mcp_server().await,
         Cmd::Memory { action } => {
             run_memory_command(action, &cfg)
         }
@@ -1277,7 +1281,7 @@ fn cmd_sysinfo(cfg: &Config) -> Result<()> {
     let key_preview = cfg
         .api_key
         .as_deref()
-        .map(|k| format!("{}****", &k[..k.len().min(8)]))
+        .map(|k| format!("{}****", k.chars().take(8).collect::<String>()))
         .unwrap_or_else(|| "(未设置)".into());
     println!("  API Key:    {key_preview}");
     println!("  Timeout:    {}s", cfg.request_timeout_secs);
