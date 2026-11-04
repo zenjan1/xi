@@ -73,7 +73,7 @@ mod tests {
         let bus = SimpleEventBus::new();
         let counter = Arc::new(AtomicUsize::new(0));
         let c = counter.clone();
-        bus.subscribe(Arc::new(move |_| c.fetch_add(1, Ordering::SeqCst)));
+        bus.subscribe(Arc::new(move |_| { c.fetch_add(1, Ordering::SeqCst); }));
         bus.publish(&Event::Heartbeat { ts: 1 });
         assert_eq!(counter.load(Ordering::SeqCst), 1);
     }
@@ -83,9 +83,9 @@ mod tests {
         let bus = SimpleEventBus::new();
         let (c1, c2, c3) = (Arc::new(AtomicUsize::new(0)), Arc::new(AtomicUsize::new(0)), Arc::new(AtomicUsize::new(0)));
         let (a, b, c) = (c1.clone(), c2.clone(), c3.clone());
-        bus.subscribe(Arc::new(move |_| a.fetch_add(1, Ordering::SeqCst)));
-        bus.subscribe(Arc::new(move |_| b.fetch_add(1, Ordering::SeqCst)));
-        bus.subscribe(Arc::new(move |_| c.fetch_add(1, Ordering::SeqCst)));
+        bus.subscribe(Arc::new(move |_| { a.fetch_add(1, Ordering::SeqCst); }));
+        bus.subscribe(Arc::new(move |_| { b.fetch_add(1, Ordering::SeqCst); }));
+        bus.subscribe(Arc::new(move |_| { c.fetch_add(1, Ordering::SeqCst); }));
         bus.publish(&Event::TaskStarted { task_id: 1, title: "t".into() });
         assert_eq!(c1.load(Ordering::SeqCst), 1);
         assert_eq!(c2.load(Ordering::SeqCst), 1);

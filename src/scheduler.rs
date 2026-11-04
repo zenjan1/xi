@@ -10,7 +10,7 @@ pub struct QueueItem { pub priority: TaskPriority, pub task_id: String, pub seq:
 
 impl QueueItem {
     fn cmp(&self, other: &Self) -> Ordering {
-        other.priority.cmp(&self.priority).then(self.seq.cmp(&other.seq))
+        self.priority.cmp(&other.priority).then(other.seq.cmp(&self.seq))
     }
 }
 
