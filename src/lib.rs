@@ -440,3 +440,9 @@ mod tests {
         assert_eq!(ops.len(), 3);
     }
 }
+pub mod event;
+pub mod klog;
+pub mod scheduler;
+pub use event::{Event, EventBus, EventHandler, SimpleEventBus};
+pub use klog::{KernelLogger, LogLevel};
+pub use scheduler::{TaskQueue, TaskPriority};
