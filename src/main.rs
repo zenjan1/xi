@@ -355,6 +355,9 @@ enum Cmd {
     },
     /// 打印版本号
     Version,
+
+    /// Ping 命令:输出 pong 与毫秒级时间戳(模型能力自检用)
+    Ping,
     /// 系统信息:内核版本/架构/组件状态/已加载模块/模型配置
     Sysinfo,
     /// 列出所有已安装的扩展
@@ -735,6 +738,14 @@ async fn main() -> Result<()> {
         },
         Cmd::Version => {
             println!("xi v{}", env!("CARGO_PKG_VERSION"));
+            Ok(())
+        }
+        Cmd::Ping => {
+            let ts = std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .map(|d| d.as_millis())
+                .unwrap_or(0);
+            println!("pong {}", ts);
             Ok(())
         }
         Cmd::Sysinfo => cmd_sysinfo(&cfg),
