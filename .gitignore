@@ -10,6 +10,7 @@
 .workbuddy/.fuse_hidden*
 .xi/llm.env
 .xi/llm.env.*.bak
+.xi/pool.local.json
 .xi/state.json
 .xi/dev.pid
 .xi/dev.log
