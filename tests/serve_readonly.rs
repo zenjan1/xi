@@ -4,7 +4,7 @@ use std::net::{Ipv4Addr, SocketAddr, TcpStream};
 use std::path::{Path, PathBuf};
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
-use xi_rs::serve::{serve, serve_readonly};
+use xi::serve::{serve, serve_readonly};
 
 struct TestWorkspace {
     path: PathBuf,

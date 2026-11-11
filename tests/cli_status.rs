@@ -133,8 +133,8 @@ fn status_parses_mock_state_and_formats_summary() {
     let dir = make_temp_dir();
     write_mock_state(&dir);
 
-    let report = xi_rs::status::parse_status(&dir).expect("parse_status should succeed");
-    let output = xi_rs::status::format_status(&report);
+    let report = xi::status::parse_status(&dir).expect("parse_status should succeed");
+    let output = xi::status::format_status(&report);
 
     let output_lower = output.to_lowercase();
     assert!(
@@ -171,7 +171,7 @@ fn status_parses_mock_state_and_formats_summary() {
 fn status_missing_metadata_returns_friendly_default() {
     let dir = make_temp_dir();
 
-    let summary = xi_rs::status::parse_status(&dir)
+    let summary = xi::status::parse_status(&dir)
         .expect("missing metadata should fall back to zero counts");
     assert_eq!(summary.completed_runs, 0);
     assert_eq!(summary.failed_runs, 0);
@@ -206,7 +206,7 @@ fn status_corrupt_metadata_returns_friendly_error() {
     )
     .unwrap();
 
-    let err = xi_rs::status::parse_status(&dir).expect_err("corrupt metadata should fail");
+    let err = xi::status::parse_status(&dir).expect_err("corrupt metadata should fail");
     let msg = err.to_string().to_lowercase();
 
     assert!(
@@ -314,8 +314,8 @@ fn status_format_truncates_recent_logs_to_latest_five() {
         ],
     );
 
-    let report = xi_rs::status::parse_status(&dir).expect("state with many logs should parse");
-    let output = xi_rs::status::format_status(&report);
+    let report = xi::status::parse_status(&dir).expect("state with many logs should parse");
+    let output = xi::status::format_status(&report);
 
     for keep in [
         "RECENT_LOG_1",
@@ -338,8 +338,8 @@ fn status_report_paths_are_fully_offline() {
 
     // These functions only read local state and format text; they must not
     // construct an LLM client or make network calls.
-    let report = xi_rs::status::parse_status(&dir).expect("parse_status should work offline");
-    let output = xi_rs::status::format_status(&report);
+    let report = xi::status::parse_status(&dir).expect("parse_status should work offline");
+    let output = xi::status::format_status(&report);
     assert!(output.contains("offline-log"));
 }
 
@@ -357,7 +357,7 @@ fn status_degrades_to_legacy_files_and_log_aggregation_when_no_state_json() {
     )
     .unwrap();
 
-    let report = xi_rs::status::parse_status(&dir)
+    let report = xi::status::parse_status(&dir)
         .expect("legacy state and log aggregation should succeed");
 
     assert_eq!(report.completed_runs, 123);

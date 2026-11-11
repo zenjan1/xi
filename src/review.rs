@@ -199,8 +199,15 @@ pub async fn run_review_command_with_diff<C: LlmClient + ?Sized>(
 
     let should_review = !cfg.model.trim().is_empty() && !diff.trim().is_empty();
     if should_review {
-        if let Some(review) = review_changes(client, cfg, diff).await? {
-            violations.extend(parse_llm_issues(&review));
+        // LLM 审查尽力而为:失败(401/网络等)时降级为仅本地静态检查,不中断命令
+        match review_changes(client, cfg, diff).await {
+            Ok(Some(review)) => {
+                violations.extend(parse_llm_issues(&review));
+            }
+            Ok(None) => {}
+            Err(e) => {
+                eprintln!("[review] LLM 审查不可用,已降级为本地静态检查: {}", e);
+            }
         }
     }
 
@@ -443,7 +450,7 @@ impl Rule for FormatRule {
                         file.path.clone(),
                         Some(*line_num),
                         Severity::Warning,
-                        format!("行长度超过 {} 字符 (实际 {} 字符)", MAX_LINE_LEN, content.len()),
+                        format!("行长度超过 {} 字符 (long line, 实际 {} 字符)", MAX_LINE_LEN, content.len()),
                     ));
                 }
                 if content.ends_with(' ') || content.ends_with('\t') {

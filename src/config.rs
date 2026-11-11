@@ -308,7 +308,10 @@ impl Config {
             price: file.price.unwrap_or(0.0),
             max_budget: file.max_budget.unwrap_or(0.0),
             cost_per_1k_tokens: file.cost_per_1k_tokens,
-            mock: false,
+            mock: matches!(
+                env::var("WORKBUDDY_LLM_MOCK").ok().as_deref(),
+                Some("1") | Some("true") | Some("yes") | Some("on")
+            ),
             webhook_enabled: file.webhook_enabled.unwrap_or(false),
             review_enabled: file.review_enabled.unwrap_or(false),
             pre_commit_review: file.pre_commit_review.unwrap_or(false),

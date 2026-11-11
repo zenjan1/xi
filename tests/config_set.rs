@@ -2,7 +2,7 @@ use std::fs;
 use std::path::PathBuf;
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use xi_rs::config::{get_config_value, set_config_value};
+use xi::config::{get_config_value, set_config_value};
 
 struct TestWorkspace {
     path: PathBuf,
@@ -614,10 +614,10 @@ fn xi_bin() -> &'static str {
         bin
     } else if let Some(bin) = option_env!("CARGO_BIN_EXE_xi") {
         bin
-    } else if let Some(bin) = option_env!("CARGO_BIN_EXE_xi_rs") {
+    } else if let Some(bin) = option_env!("CARGO_BIN_EXE_xi") {
         bin
     } else {
-        panic!("neither CARGO_BIN_EXE_xi, CARGO_BIN_EXE_xi, nor CARGO_BIN_EXE_xi_rs is set")
+        panic!("neither CARGO_BIN_EXE_xi, CARGO_BIN_EXE_xi, nor CARGO_BIN_EXE_xi is set")
     }
 }
 
