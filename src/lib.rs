@@ -443,6 +443,25 @@ mod tests {
 pub mod event;
 pub mod klog;
 pub mod scheduler;
+
+// ---------------------------------------------------------------------------
+// Legacy (pre-bus) event API — kept as-is for backwards compatibility.
+// Existing call sites using `xi::EventBus` / `xi::EventHandler` keep working.
+// ---------------------------------------------------------------------------
 pub use event::{Event, EventBus, EventHandler, SimpleEventBus};
+
+// ---------------------------------------------------------------------------
+// Kernel pub/sub event bus API.
+//
+// The canonical paths live in the `event` module, so external crates can do:
+//
+//     use xi::event::{Bus, Handler, Filter, SubscriptionId, pattern_matches};
+//
+// These root-level re-exports are a convenience shortcut (e.g. `xi::Bus`) and
+// do not replace the module-qualified paths.
+// ---------------------------------------------------------------------------
+#[doc(inline)]
+pub use event::{pattern_matches, Bus, Filter, Handler, SubscriptionId};
+
 pub use klog::{KernelLogger, LogLevel};
 pub use scheduler::{TaskQueue, TaskPriority};
