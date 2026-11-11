@@ -452,7 +452,22 @@ async fn main() -> Result<()> {
                         cfg.max_parallel = p.max(1);
                     }
                     cfg.mock = mock;
-                    run_task(cfg, &goal).await
+                    // 记录运行前已有的 run id,运行结束后据此定位本次新产生的 RunRecord,
+                    // 避免依赖 Workspace::root 的返回顺序;
+                    // 打印报告路径不影响退出码语义(run_task 的错误仍向上传播)。
+                    let workspace_dir = cfg.workspace_dir.clone();
+                    let known_runs: Vec<String> = Workspace::root(&workspace_dir)
+                        .into_iter()
+                        .map(|r| r.id)
+                        .collect();
+                    run_task(cfg, &goal).await?;
+                    if let Some(record) = Workspace::root(&workspace_dir)
+                        .into_iter()
+                        .find(|r| !known_runs.contains(&r.id))
+                    {
+                        println!("完整报告: {}", report_path_display(&workspace_dir, &record.id));
+                    }
+                    Ok(())
                 }
                 RunCmd::Export { run_id, output, include_artifacts, format, since, until, agent } => {
                     // TODO: 实现导出逻辑 (步骤4)
@@ -1869,5 +1884,41 @@ mod config_set_cli_tests {
             Ok(_) => panic!("expected missing value error"),
             Err(e) => assert_eq!(e.kind(), ErrorKind::MissingRequiredArgument),
         }
+    }
+}
+
+/// 构造一次运行的完整报告路径(`{workspace_dir}/{run_id}/report.md`),用于 CLI 展示。
+///
+/// 接受任何 `AsRef<Path>` 类型(PathBuf / String / &str),
+/// 调用方无需关心 `cfg.workspace_dir` 的具体类型。
+fn report_path_display<P: AsRef<std::path::Path>>(workspace_dir: P, run_id: &str) -> String {
+    workspace_dir
+        .as_ref()
+        .join(run_id)
+        .join("report.md")
+        .display()
+        .to_string()
+}
+
+#[cfg(test)]
+mod report_path_tests {
+    use super::report_path_display;
+    use std::path::PathBuf;
+
+    #[test]
+    fn report_path_joins_workspace_run_and_file() {
+        assert_eq!(
+            PathBuf::from(report_path_display("/tmp/xi-ws", "01HXYZ")),
+            PathBuf::from("/tmp/xi-ws").join("01HXYZ").join("report.md")
+        );
+    }
+
+    #[test]
+    fn report_path_accepts_owned_string() {
+        let ws = String::from("ws");
+        assert_eq!(
+            PathBuf::from(report_path_display(&ws, "run-1")),
+            PathBuf::from("ws").join("run-1").join("report.md")
+        );
     }
 }
